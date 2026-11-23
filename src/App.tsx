@@ -255,7 +255,7 @@ export default function App() {
   const checkoutSchedule = checkoutProduct
     ? instalmentAmounts(checkoutProduct.price * quantity)
     : null;
-  const displayName = "Khánh";
+  const displayName = "bạn";
 
   return (
     <div className={styles.shell}>
@@ -307,10 +307,10 @@ export default function App() {
             <p>Chia nhỏ thanh toán, chủ động với từng kế hoạch.</p>
           </div>
           <div className={styles.demoProfile}>
-            <span className={styles.avatar}>K</span>
+            <span className={styles.avatar}>D</span>
             <span>
-              <strong>{displayName}</strong>
-              <small>Tài khoản demo</small>
+              <strong>Tài khoản demo</strong>
+              <small>Người dùng thử nghiệm</small>
             </span>
             <span className={styles.profilePulse} />
           </div>
@@ -352,7 +352,7 @@ export default function App() {
               <RefreshCw size={18} />
             </button>
             <span className={styles.topbarDivider} />
-            <span className={styles.topAvatar}>K</span>
+            <span className={styles.topAvatar}>D</span>
           </div>
         </header>
 
