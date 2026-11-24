@@ -1,76 +1,90 @@
 import axios, { AxiosError } from "axios";
 import type {
   ApiResponse,
-  Checkout,
+  ApplicationInput,
   CreditAccount,
-  OrderDetail,
-  OrderSummary,
-  Product,
+  CreditApplication,
+  Drawdown,
+  DrawdownDetail,
   Repayment,
-  Settlement,
+  RepaymentHistory,
 } from "./types";
 
-// Vite proxies /api in development. Production should route /api to the backend too.
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 const client = axios.create({
   baseURL: "/api",
-  headers: { Accept: "application/json" },
   timeout: 15000,
+  headers: { Accept: "application/json" },
 });
 
 client.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiResponse<never>>) => {
+    const status = error.response?.status;
     const message =
-      error.response?.data?.message ||
-      (error.response
-        ? `Yêu cầu thất bại (${error.response.status}).`
-        : "Không kết nối được tới máy chủ. Hãy kiểm tra backend.");
-    return Promise.reject(new Error(message));
+      error.response?.data?.message ??
+      (status
+        ? `Yêu cầu thất bại (${status}).`
+        : "Không kết nối được backend. Hãy kiểm tra máy chủ và thử lại.");
+    return Promise.reject(new ApiError(message, status));
   },
 );
 
 async function get<T>(path: string): Promise<T> {
-  const response = await client.get<ApiResponse<T>>(path);
-  return response.data.result;
+  return (await client.get<ApiResponse<T>>(path)).data.result;
 }
 
-async function post<T>(
-  path: string,
-  idempotencyKey?: string,
-  body?: unknown,
-): Promise<T> {
-  const response = await client.post<ApiResponse<T>>(path, body, {
-    headers: idempotencyKey ? { "Idempotency-Key": idempotencyKey } : undefined,
-  });
-  return response.data.result;
+async function post<T>(path: string, body?: unknown, key?: string): Promise<T> {
+  return (
+    await client.post<ApiResponse<T>>(path, body, {
+      headers: key ? { "Idempotency-Key": key } : undefined,
+    })
+  ).data.result;
+}
+
+export async function optional<T>(request: Promise<T>): Promise<T | null> {
+  try {
+    return await request;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 export const api = {
-  products: () => get<Product[]>("/products"),
-  creditAccount: () => get<CreditAccount>("/credit-account"),
-  orders: () => get<OrderSummary[]>("/orders"),
-  order: (id: string) => get<OrderDetail>(`/orders/${id}`),
-  repayments: () => get<Repayment[]>("/repayments"),
-  reserve: (productId: string, quantity: number, key: string) =>
-    post<Checkout>("/checkouts", key, { productId, quantity }),
-  confirm: (id: string, key: string) =>
-    post<OrderDetail>(`/checkouts/${id}/confirm`, key),
-  cancel: (id: string) => post<OrderDetail>(`/checkouts/${id}/cancel`),
-  pay: (id: string, key: string) => post(`/instalments/${id}/pay`, key),
-  settle: (id: string, key: string) =>
-    post<Settlement>(`/orders/${id}/settle`, key),
+  latestApplication: () =>
+    get<CreditApplication>("/credit-applications/latest"),
+  submitApplication: (body: ApplicationInput) =>
+    post<CreditApplication>("/credit-applications", body),
+  account: () => get<CreditAccount>("/credit-account"),
+  drawdowns: () => get<Drawdown[]>("/credit-drawdowns"),
+  drawdown: (id: string) => get<DrawdownDetail>(`/credit-drawdowns/${id}`),
+  repayments: (id: string) =>
+    get<RepaymentHistory[]>(`/credit-drawdowns/${id}/repayments`),
+  utilize: (amount: number, key: string) =>
+    post<DrawdownDetail>("/credit-drawdowns", { amount }, key),
+  repay: (instalmentId: string, key: string) =>
+    post<Repayment>(`/instalments/${instalmentId}/repay`, undefined, key),
 };
 
-export function actionKey(action: string): string {
-  const storageKey = `lendly:pending:${action}`;
-  let key = sessionStorage.getItem(storageKey);
-  if (!key) {
-    key = crypto.randomUUID();
-    sessionStorage.setItem(storageKey, key);
-  }
+export function idempotencyKey(action: string): string {
+  const storageKey = `mini-lending:${action}`;
+  const existing = sessionStorage.getItem(storageKey);
+  if (existing) return existing;
+  const key = crypto.randomUUID();
+  sessionStorage.setItem(storageKey, key);
   return key;
 }
 
-export function clearActionKey(action: string): void {
-  sessionStorage.removeItem(`lendly:pending:${action}`);
+export function clearIdempotencyKey(action: string): void {
+  sessionStorage.removeItem(`mini-lending:${action}`);
 }

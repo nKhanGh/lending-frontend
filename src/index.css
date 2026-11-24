@@ -1,13 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap");
 
 :root {
   font-family: "DM Sans", sans-serif;
-  color: #172a2a;
-  background: #f5f7f6;
+  color: #252c2b;
+  background: #f6f5f1;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
+
 * {
   box-sizing: border-box;
 }
@@ -15,17 +16,17 @@ body {
   margin: 0;
   min-width: 320px;
 }
-button {
+button,
+input {
   font: inherit;
+}
+button {
   cursor: pointer;
 }
 button:disabled {
   cursor: not-allowed;
 }
-a {
-  color: inherit;
-}
 ::selection {
-  background: #c9f0df;
-  color: #143a32;
+  background: #d6c2a0;
+  color: #17322c;
 }

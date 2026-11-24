@@ -5,39 +5,24 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
+export interface CreditApplication {
+  applicationId: string;
+  decision: "APPROVED" | "REJECTED";
+  reasonCode: string;
+  policyVersion: string;
+  monthlySurplus: number;
+  approvedLimit: number;
+  currency: "SGD";
+  assessedAt: string;
+}
+
 export interface CreditAccount {
   accountId: string;
-  userId: string;
   totalLimit: number;
-  outstandingAmount: number;
-  reservedAmount: number;
-  availableCredit: number;
-  currency: string;
-}
-
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  currency: string;
-}
-
-export type OrderStatus = "RESERVED" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
-
-export interface OrderSummary {
-  id: string;
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  totalAmount: number;
-  currency: string;
-  status: OrderStatus;
-  createdAt: string;
-  confirmedAt: string | null;
-  cancelledAt: string | null;
-  expiredAt: string | null;
+  usedLimit: number;
+  availableLimit: number;
+  currency: "SGD";
+  status: "ACTIVE";
 }
 
 export interface Instalment {
@@ -49,37 +34,45 @@ export interface Instalment {
   paidAt: string | null;
 }
 
-export interface OrderDetail extends OrderSummary {
-  reservationId: string;
-  reservationStatus: string;
-  reservationExpiresAt: string;
-  instalments: Instalment[];
+export interface Drawdown {
+  drawdownId: string;
+  originalAmount: number;
+  outstandingPrincipal: number;
+  availableLimit: number;
+  currency: "SGD";
+  status: "ACTIVE" | "PAID_OFF";
+  createdAt: string;
 }
 
-export interface Checkout {
-  checkoutId: string;
-  status: OrderStatus;
-  amount: number;
-  currency: string;
-  expiresAt: string;
-  availableCredit: number;
+export interface DrawdownDetail extends Drawdown {
+  instalments: Instalment[];
 }
 
 export interface Repayment {
   repaymentId: string;
   instalmentId: string;
-  orderId: string;
-  amount: number;
-  currency: string;
-  createdAt: string;
+  drawdownId: string;
+  paidAmount: number;
+  remainingDrawdownPrincipal: number;
+  usedLimit: number;
+  availableLimit: number;
+  instalmentStatus: "PAID";
+  drawdownStatus: "ACTIVE" | "PAID_OFF";
+  paidAt: string;
 }
 
-export interface Settlement {
-  orderId: string;
-  repaymentIds: string[];
-  instalmentsPaid: number;
+export interface RepaymentHistory {
+  repaymentId: string;
+  instalmentId: string;
+  sequenceNo: number;
   amount: number;
-  outstandingAmount: number;
-  availableCredit: number;
-  currency: string;
+  status: "SUCCESS";
+  paidAt: string;
+}
+
+export interface ApplicationInput {
+  monthlyNetIncome: number;
+  monthlyLivingExpenses: number;
+  monthlyDebtPayments: number;
+  currency: "SGD";
 }
